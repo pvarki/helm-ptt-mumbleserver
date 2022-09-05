@@ -30,6 +30,21 @@ spec:
       volumes:
         - name: letsencrypt-data
         - name: murmur-data
+      initContainers:
+        - name: fill-volumes
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          volumeMounts:
+            - name: letsencrypt-data
+              mountPath: /tgt/le
+            - name: murmur-data
+              mountPath: /tgt/murmurdata
+          command:
+            - /bin/bash
+            - -c
+            - >
+              cp -a /etc/letsencrypt/./ /tgt/le/ &&
+              cp -a /murmurdata/./ /tgt/murmurdata/ &&
+              ls -R /tgt/le /tgt/murmurdata
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
