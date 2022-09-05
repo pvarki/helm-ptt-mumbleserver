@@ -27,26 +27,58 @@ spec:
       serviceAccountName: {{ include "mumbleserver.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: letsencrypt-data
+        - name: murmur-data
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          # TODO: Remove this when we are production ready
+          - name: "CERTBOT_EXTRA_ARGS"
+            value: "--test-cert"
+          - name: "SERVER_DOMAIN"
+            value: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
+          - name: "CERTBOT_EMAIL"
+            value: {{ required "A valid .Values.mumble.certbot_email entry required!" .Values.mumble.certbot_email }}
+          - name: "SERVER_PASSWORD"
+            valueFrom:
+              secretKeyRef:
+                key: server_password
+                name: {{ .Release.Name }}-auth
+          - name: "SUPERUSER_PASSWORD"
+            valueFrom:
+              secretKeyRef:
+                key: superuser_password
+                name: {{ .Release.Name }}-auth
           ports:
             - name: http
               containerPort: 80
               protocol: TCP
+            - name: mumble-tcp
+              containerPort: 64738
+              protocol: TCP
+            - name: mumble-udp
+              containerPort: 64738
+              protocol: UDP
           livenessProbe:
-            httpGet:
-              path: /
-              port: http
+            exec:
+              command:
+                - pgrep
+                - murmurd
           readinessProbe:
-            httpGet:
-              path: /
-              port: http
+            tcpSocket:
+              port: mumble-tcp
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /murmurdata
+              name: murmur-data
+            - mountPath: /etc/letsencrypt
+              name: letsencrypt-data
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

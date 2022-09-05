@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: pvarkiprojekti/mumbleserver
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -38,7 +38,13 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 80
+
+mumble:
+  server_domain: ""
+  server_password: ""
+  certbot_email: ""
+  superuser_password: ""
+
 
 ingress:
   enabled: false
@@ -71,7 +77,7 @@ resources: {}
 autoscaling:
   enabled: false
   minReplicas: 1
-  maxReplicas: 100
+  maxReplicas: 1
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
