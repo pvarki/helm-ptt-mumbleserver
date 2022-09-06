@@ -42,9 +42,9 @@ service:
 mumble:
   server_domain: ""
   server_password: ""
-  certbot_email: ""
   superuser_password: ""
   externalport: 64738
+  certbot_email: "benjam.gronmark_arkiproj@hotmail.com"
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
