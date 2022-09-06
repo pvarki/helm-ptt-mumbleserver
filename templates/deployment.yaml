@@ -87,9 +87,12 @@ spec:
               command:
                 - pgrep
                 - murmurd
+          # TODO: Replace with proper mumble protocol ping
           readinessProbe:
-            tcpSocket:
-              port: mumble-tcp
+            exec:
+              command:
+                - pgrep
+                - murmurd
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
