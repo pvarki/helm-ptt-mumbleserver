@@ -5,4 +5,4 @@ type: application
 version: 0.1.0
 icon: https://upload.wikimedia.org/wikipedia/commons/8/8f/Icons_mumble.svg
 # https://hub.docker.com/r/pvarkiprojekti/mumbleserver/tags (do NOT use "latest")
-appVersion: "20220903-2111"
+appVersion: "20220906-1908"

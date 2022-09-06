@@ -52,27 +52,30 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-          # TODO: Remove this when we are production ready
-          - name: "CERTBOT_EXTRA_ARGS"
-            value: "--test-cert"
-          - name: "SERVER_DOMAIN"
-            value: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
-          - name: "CERTBOT_EMAIL"
-            value: {{ required "A valid .Values.mumble.certbot_email entry required!" .Values.mumble.certbot_email }}
-          - name: "SERVER_PASSWORD"
-            valueFrom:
-              secretKeyRef:
-                key: server_password
-                name: {{ .Release.Name }}-auth
-          - name: "SUPERUSER_PASSWORD"
-            valueFrom:
-              secretKeyRef:
-                key: superuser_password
-                name: {{ .Release.Name }}-auth
+            # TODO: Remove this when we are production ready
+            - name: "CERTBOT_EXTRA_ARGS"
+              value: "--test-cert"
+            # TODO: Remove when we have sensible way to populate the certificates
+            - name: "NO_TLS"
+              value: "1"
+            # Disable automatic certbot, we have chicken vs egg issue with the loadbalancer...
+            - name: "NO_CERTBOT"
+              value: "1"
+            - name: "SERVER_DOMAIN"
+              value: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
+            - name: "CERTBOT_EMAIL"
+              value: {{ required "A valid .Values.mumble.certbot_email entry required!" .Values.mumble.certbot_email }}
+            - name: "SERVER_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key: server_password
+                  name: {{ .Release.Name }}-auth
+            - name: "SUPERUSER_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key: superuser_password
+                  name: {{ .Release.Name }}-auth
           ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
             - name: mumble-tcp
               containerPort: 64738
               protocol: TCP
