@@ -45,6 +45,8 @@ mumble:
   superuser_password: ""
   externalport: 64738
   certbot_email: "benjam.gronmark_arkiproj@hotmail.com"
+# TODO: Add actual certmanager support before setting this to true
+use_certmanager: false
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious

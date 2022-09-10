@@ -55,9 +55,10 @@ spec:
             # TODO: Remove this when we are production ready
             - name: "CERTBOT_EXTRA_ARGS"
               value: "--test-cert"
-            # Disable automatic certbot, if we use cert-manager and mount the certs some other way
-            #- name: "NO_CERTBOT"
-            #  value: "1"
+            {{- if .Values.use_certmanager }}
+            - name: "NO_CERTBOT"
+              value: "1"
+            {{- end }}
             - name: "SERVER_DOMAIN"
               value: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
             - name: "CERTBOT_EMAIL"
@@ -73,9 +74,11 @@ spec:
                   key: superuser_password
                   name: {{ .Release.Name }}-auth
           ports:
+            {{- if not .Values.use_certmanager }}
             - name: http
               containerPort: 80
               protocol: TCP
+            {{- end }}
             - name: mumble-tcp
               containerPort: 64738
               protocol: TCP

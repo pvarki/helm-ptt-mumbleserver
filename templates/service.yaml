@@ -7,10 +7,12 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
+    {{- if not .Values.use_certmanager }}
     - port: 80
       targetPort: http
       protocol: TCP
       name: http
+    {{- end }}
     - port: 64738
       targetPort: mumble-tcp
       protocol: TCP
