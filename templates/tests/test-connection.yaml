@@ -8,8 +8,9 @@ metadata:
     "helm.sh/hook": test
 spec:
   containers:
-    - name: wget
-      image: busybox
-      command: ['wget']
-      args: ['{{ include "mumbleserver.fullname" . }}:{{ .Values.service.port }}']
+    - name: mumble-ping
+      image: pvarkiprojekti/mumbleping:20220909-1026
+      env:
+        - name: "SERVER_DOMAIN"
+          value: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
   restartPolicy: Never
