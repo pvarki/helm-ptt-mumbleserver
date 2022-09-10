@@ -55,12 +55,9 @@ spec:
             # TODO: Remove this when we are production ready
             - name: "CERTBOT_EXTRA_ARGS"
               value: "--test-cert"
-            # TODO: Remove when we have sensible way to populate the certificates
-            - name: "NO_TLS"
-              value: "1"
-            # Disable automatic certbot, we have chicken vs egg issue with the loadbalancer...
-            - name: "NO_CERTBOT"
-              value: "1"
+            # Disable automatic certbot, if we use cert-manager and mount the certs some other way
+            #- name: "NO_CERTBOT"
+            #  value: "1"
             - name: "SERVER_DOMAIN"
               value: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
             - name: "CERTBOT_EMAIL"
@@ -76,6 +73,9 @@ spec:
                   key: superuser_password
                   name: {{ .Release.Name }}-auth
           ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
             - name: mumble-tcp
               containerPort: 64738
               protocol: TCP
@@ -87,12 +87,17 @@ spec:
               command:
                 - pgrep
                 - murmurd
-          # TODO: Replace with proper mumble protocol ping
+            initialDelaySeconds: 15
+            periodSeconds: 10
           readinessProbe:
             exec:
               command:
-                - pgrep
-                - murmurd
+                - /bin/bash
+                - -c
+                - >
+                  pgrep certbot || pgrep murmurd
+            initialDelaySeconds: 1
+            periodSeconds: 1
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
