@@ -45,6 +45,8 @@ mumble:
   superuser_password: ""
   externalport: 64738
   certbot_email: "benjam.gronmark_arkiproj@hotmail.com"
+  # You can set this to false if you have added cert-manaer support or have handled DNS before certbot tries to do stuff
+  disable_tls: true
 # TODO: Add actual certmanager support before setting this to true
 use_certmanager: false
 

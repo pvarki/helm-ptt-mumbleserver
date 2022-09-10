@@ -55,7 +55,11 @@ spec:
             # TODO: Remove this when we are production ready
             - name: "CERTBOT_EXTRA_ARGS"
               value: "--test-cert"
-            {{- if .Values.use_certmanager }}
+            {{- if .Values.mumble.disable_tls }}
+            - name: "NO_TLS"
+              value: "1"
+            {{- end }}
+            {{- if or .Values.use_certmanager .Values.mumble.disable_tls }}
             - name: "NO_CERTBOT"
               value: "1"
             {{- end }}
@@ -74,7 +78,7 @@ spec:
                   key: superuser_password
                   name: {{ .Release.Name }}-auth
           ports:
-            {{- if not .Values.use_certmanager }}
+            {{- if and (not .Values.use_certmanager) (not .Values.mumble.disable_tls) }}
             - name: http
               containerPort: 80
               protocol: TCP
