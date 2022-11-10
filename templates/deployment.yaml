@@ -67,6 +67,8 @@ spec:
               value: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
             - name: "CERTBOT_EMAIL"
               value: {{ required "A valid .Values.mumble.certbot_email entry required!" .Values.mumble.certbot_email }}
+            - name: "SERVER_USERS"
+              value: {{ required "A valid .Values.mumble.users entry required!" .Values.mumble.users }}
             - name: "SERVER_PASSWORD"
               valueFrom:
                 secretKeyRef:
