@@ -30,6 +30,21 @@ spec:
       volumes:
         - name: letsencrypt-data
         - name: murmur-data
+      initContainers:
+        - name: fill-volumes
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          volumeMounts:
+            - name: letsencrypt-data
+              mountPath: /tgt/le
+            - name: murmur-data
+              mountPath: /tgt/murmurdata
+          command:
+            - /bin/bash
+            - -c
+            - >
+              cp -a /etc/letsencrypt/./ /tgt/le/ &&
+              cp -a /murmurdata/./ /tgt/murmurdata/ &&
+              ls -R /tgt/le /tgt/murmurdata
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -37,27 +52,39 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-          # TODO: Remove this when we are production ready
-          - name: "CERTBOT_EXTRA_ARGS"
-            value: "--test-cert"
-          - name: "SERVER_DOMAIN"
-            value: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
-          - name: "CERTBOT_EMAIL"
-            value: {{ required "A valid .Values.mumble.certbot_email entry required!" .Values.mumble.certbot_email }}
-          - name: "SERVER_PASSWORD"
-            valueFrom:
-              secretKeyRef:
-                key: server_password
-                name: {{ .Release.Name }}-auth
-          - name: "SUPERUSER_PASSWORD"
-            valueFrom:
-              secretKeyRef:
-                key: superuser_password
-                name: {{ .Release.Name }}-auth
+            # TODO: Remove this when we are production ready
+            - name: "CERTBOT_EXTRA_ARGS"
+              value: "--test-cert"
+            {{- if .Values.mumble.disable_tls }}
+            - name: "NO_TLS"
+              value: "1"
+            {{- end }}
+            {{- if or .Values.use_certmanager .Values.mumble.disable_tls }}
+            - name: "NO_CERTBOT"
+              value: "1"
+            {{- end }}
+            - name: "SERVER_DOMAIN"
+              value: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
+            - name: "CERTBOT_EMAIL"
+              value: {{ required "A valid .Values.mumble.certbot_email entry required!" .Values.mumble.certbot_email }}
+            - name: "SERVER_USERS"
+              value: {{ required "A valid .Values.mumble.users entry required!" .Values.mumble.users }}
+            - name: "SERVER_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key: server_password
+                  name: {{ .Release.Name }}-auth
+            - name: "SUPERUSER_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  key: superuser_password
+                  name: {{ .Release.Name }}-auth
           ports:
+            {{- if and (not .Values.use_certmanager) (not .Values.mumble.disable_tls) }}
             - name: http
               containerPort: 80
               protocol: TCP
+            {{- end }}
             - name: mumble-tcp
               containerPort: 64738
               protocol: TCP
@@ -69,9 +96,17 @@ spec:
               command:
                 - pgrep
                 - murmurd
+            initialDelaySeconds: 15
+            periodSeconds: 10
           readinessProbe:
-            tcpSocket:
-              port: mumble-tcp
+            exec:
+              command:
+                - /bin/bash
+                - -c
+                - >
+                  pgrep certbot || pgrep murmurd
+            initialDelaySeconds: 1
+            periodSeconds: 1
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:

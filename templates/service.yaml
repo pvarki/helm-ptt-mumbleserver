@@ -4,13 +4,17 @@ metadata:
   name: {{ include "mumbleserver.fullname" . }}
   labels:
     {{- include "mumbleserver.labels" . | nindent 4 }}
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: {{ required "A valid .Values.mumble.server_domain entry required!" .Values.mumble.server_domain }}
 spec:
   type: {{ .Values.service.type }}
   ports:
+    {{- if and (not .Values.use_certmanager) (not .Values.mumble.disable_tls) }}
     - port: 80
       targetPort: http
       protocol: TCP
       name: http
+    {{- end }}
     - port: 64738
       targetPort: mumble-tcp
       protocol: TCP
